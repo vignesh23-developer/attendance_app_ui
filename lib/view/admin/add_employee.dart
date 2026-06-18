@@ -1,34 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:sizer/sizer.dart';
-
+import '../../controller/add_employee_controller.dart';
+import '../../controller/employee_list_controller.dart';
 import '../../data/const/color_theme.dart';
+import '../../model/employee_model.dart';
 
-class AddEmployeeScreen extends StatelessWidget {
-  const AddEmployeeScreen({super.key});
+class AddEmployeeScreen extends StatefulWidget {
+  final bool isEdit;
+  final EmployeeModel? employee;
+
+  const AddEmployeeScreen({super.key, this.isEdit = false, this.employee});
+
+  @override
+  State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
+}
+
+class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.isEdit && widget.employee != null) {
+      controller.nameController.text = widget.employee!.name;
+
+      controller.roleController.text = widget.employee!.role;
+
+      controller.phoneController.text = widget.employee!.phone;
+    }
+  }
+
+  final AddEmployeeController controller = Get.put(AddEmployeeController());
+  final EmployeeController employeeController = Get.put(EmployeeController());
 
   @override
   Widget build(BuildContext context) {
-
-    final TextEditingController nameController =
-    TextEditingController();
-
-    final TextEditingController roleController =
-    TextEditingController();
-
-    final TextEditingController emailController =
-    TextEditingController();
-
-    final TextEditingController passwordController =
-    TextEditingController();
-
-    final TextEditingController phoneController =
-    TextEditingController();
-
     return Scaffold(
       backgroundColor: AppColors.background,
 
       appBar: CommonAppBar(
-        title: "Add Employee",
+        title: widget.isEdit ? "Edit Employee" : "Add Employee",
         backgroundColor: AppColors.primary,
         titleColor: AppColors.white,
       ),
@@ -37,73 +50,87 @@ class AddEmployeeScreen extends StatelessWidget {
         padding: EdgeInsets.all(16.sp),
         child: Column(
           children: [
-
             /// PROFILE IMAGE
             Center(
               child: Stack(
                 children: [
+                  Obx(
+                    () => Center(
+                      child: Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: controller.pickImage,
+                            child: Container(
+                              width: 30.w,
+                              height: 12.h,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppColors.primaryGradient,
+                              ),
+                              child: controller.profileImage.value != null
+                                  ? ClipOval(
+                                      child: Image.file(
+                                        controller.profileImage.value!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.person_rounded,
+                                      color: AppColors.white,
+                                      size: 30.sp,
+                                    ),
+                            ),
+                          ),
 
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.primaryGradient,
-                    ),
-                    child: Icon(
-                      Icons.person_rounded,
-                      color: AppColors.white,
-                      size: 50.sp,
-                    ),
-                  ),
-
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.camera_alt_rounded,
-                        color: AppColors.primary,
-                        size: 18.sp,
+                          Positioned(
+                            top: 0,
+                            bottom: -70,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: controller.pickImage,
+                              child: Container(
+                                width: 10.w,
+                                height: 10.h,
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: AppColors.primary,
+                                  size: 18.sp,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(height: 10.sp),
-
+            SizedBox(height: 2.h),
             CommonText(
               text: "Add Profile Image",
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.primary,
             ),
-
-            SizedBox(height: 24.sp),
-
-            /// FORM CARD
+            SizedBox(height: 3.h),
             CommonCard(
               child: Column(
                 children: [
-
                   _FieldTitle(title: "Employee Name"),
 
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 5.sp),
 
                   CommonTextFormField(
-                    controller: nameController,
+                    controller: controller.nameController,
                     hintText: "Enter employee name",
                     prefixIcon: Icon(
                       Icons.person_outline_rounded,
@@ -112,14 +139,14 @@ class AddEmployeeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 18.sp),
+                  SizedBox(height: 10.sp),
 
                   _FieldTitle(title: "Role"),
 
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 5.sp),
 
                   CommonTextFormField(
-                    controller: roleController,
+                    controller: controller.roleController,
                     hintText: "Enter employee role",
                     prefixIcon: Icon(
                       Icons.work_outline_rounded,
@@ -128,14 +155,14 @@ class AddEmployeeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 18.sp),
+                  SizedBox(height: 10.sp),
 
                   _FieldTitle(title: "Email"),
 
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 5.sp),
 
                   CommonTextFormField(
-                    controller: emailController,
+                    controller: controller.emailController,
                     hintText: "Enter employee email",
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icon(
@@ -145,14 +172,14 @@ class AddEmployeeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 18.sp),
+                  SizedBox(height: 10.sp),
 
                   _FieldTitle(title: "Password"),
 
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 5.sp),
 
                   CommonTextFormField(
-                    controller: passwordController,
+                    controller: controller.passwordController,
                     hintText: "Enter password",
                     obscureText: true,
                     prefixIcon: Icon(
@@ -162,14 +189,14 @@ class AddEmployeeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 18.sp),
+                  SizedBox(height: 10.sp),
 
                   _FieldTitle(title: "Contact Number"),
 
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 5.sp),
 
                   CommonTextFormField(
-                    controller: phoneController,
+                    controller: controller.phoneController,
                     hintText: "Enter contact number",
                     keyboardType: TextInputType.phone,
                     prefixIcon: Icon(
@@ -179,15 +206,35 @@ class AddEmployeeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 28.sp),
+                  SizedBox(height: 20.sp),
 
-                  CommonButton(
-                    label: "Save Employee",
-                    icon: const Icon(
-                      Icons.check_circle_outline_rounded,
-                      color: AppColors.white,
+                  Obx(
+                    () => CommonButton(
+                      label: controller.isLoading.value
+                          ? "Please Wait..."
+                          : widget.isEdit
+                          ? "Update Employee"
+                          : "Save Employee",
+                      icon: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: AppColors.white,
+                      ),
+
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () async {
+                              if (widget.isEdit) {
+                                await employeeController.updateEmployee(
+                                  employeeId: widget.employee!.employeeId,
+                                  name: controller.nameController.text.trim(),
+                                  role: controller.roleController.text.trim(),
+                                  number: controller.phoneController.text.trim(),
+                                );
+                              } else {
+                                await controller.registerEmployee();
+                              }
+                            },
                     ),
-                    onPressed: () {},
                   ),
                 ],
               ),
@@ -199,11 +246,8 @@ class AddEmployeeScreen extends StatelessWidget {
   }
 }
 
-
 class _FieldTitle extends StatelessWidget {
-  const _FieldTitle({
-    required this.title,
-  });
+  const _FieldTitle({required this.title});
 
   final String title;
 

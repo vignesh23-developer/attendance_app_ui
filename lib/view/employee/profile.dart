@@ -1,14 +1,20 @@
+import 'package:attandance_app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import '../../data/const/color_theme.dart';
+import '../../data/local_storage/stroage_services.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CommonAppBar(
@@ -18,15 +24,12 @@ class ProfileScreen extends StatelessWidget {
         showBack: false,
 
         actions: [
-
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: TextButton.icon(
-
               onPressed: () => _showLogoutDialog(),
 
               style: TextButton.styleFrom(
-
                 backgroundColor: AppColors.white,
 
                 padding: const EdgeInsets.symmetric(
@@ -37,10 +40,7 @@ class ProfileScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
 
-                  side: const BorderSide(
-                    color: AppColors.danger,
-                    width: 1,
-                  ),
+                  side: const BorderSide(color: AppColors.danger, width: 1),
                 ),
               ),
 
@@ -67,7 +67,7 @@ class ProfileScreen extends StatelessWidget {
             _ProfileHeader(),
 
             // ── Info cards ─────────────────────────────────
-            _SectionTitle('Personal Information',"Edit"),
+            _SectionTitle(title: 'Personal Information'),
             _InfoCard(),
           ],
         ),
@@ -80,36 +80,43 @@ class ProfileScreen extends StatelessWidget {
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const CommonText(
-          text:
-          'Logout',
+          text: 'Logout',
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
         content: const CommonText(
-          text:
-          'Are you sure you want to logout?',
+          text: 'Are you sure you want to logout?',
           fontSize: 15,
           color: AppColors.textSecond,
         ),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: const CommonText( text: 'Cancel', fontSize: 14,
-                color: AppColors.grey),
+            child: const CommonText(
+              text: 'Cancel',
+              fontSize: 14,
+              color: AppColors.grey,
+            ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Get.back();
-              // Handle logout
+              await StorageService.logout();
+              Get.offAllNamed(AppRoutes.selectRole);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.danger,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const CommonText( text: 'Logout', fontSize: 14,
-                color: AppColors.white, fontWeight: FontWeight.w600),
+            child: const CommonText(
+              text: 'Logout',
+              fontSize: 14,
+              color: AppColors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -120,15 +127,39 @@ class ProfileScreen extends StatelessWidget {
 // ══════════════════════════════════════════════
 // Profile Header
 // ══════════════════════════════════════════════
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends StatefulWidget {
+  @override
+  State<_ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<_ProfileHeader> {
+  String name = "";
+  String role = "";
+  String? image;
+  int? employeeId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+    name = await StorageService.getName() ?? "";
+    role = await StorageService.getRoleName() ?? "";
+    image = await StorageService.getImage();
+    employeeId = await StorageService.getLoginId() ?? 0;
+
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20.sp, 15.sp, 20.sp, 15.sp),
-      decoration: const BoxDecoration(
-        gradient: AppColors.primaryGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Column(
         children: [
           Stack(
@@ -144,45 +175,54 @@ class _ProfileHeader extends StatelessWidget {
                     width: 2.5,
                   ),
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: AppColors.white,
-                  size: 48,
-                ),
+                child: image != null && image!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          image!,
+                          width: 88,
+                          height: 88,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
+                        Icons.person_rounded,
+                        color: AppColors.white,
+                        size: 48,
+                      ),
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: AppColors.primary.withOpacity(0.2), width: 2),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: AppColors.primary,
-                    size: 14,
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   bottom: 0,
+              //   right: 0,
+              //   child: Container(
+              //     width: 28,
+              //     height: 28,
+              //     decoration: BoxDecoration(
+              //       color: AppColors.white,
+              //       shape: BoxShape.circle,
+              //       border: Border.all(
+              //         color: AppColors.primary.withOpacity(0.2),
+              //         width: 2,
+              //       ),
+              //     ),
+              //     child: const Icon(
+              //       Icons.camera_alt_rounded,
+              //       color: AppColors.primary,
+              //       size: 14,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
           SizedBox(height: 14.sp),
           CommonText(
-            text:
-            'John Doe',
-            fontSize: 20,
+            text: name.isEmpty ? "Employee" : name,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w700,
             color: AppColors.white,
           ),
           SizedBox(height: 4.sp),
           CommonText(
-            text:
-            'Senior Software Engineer',
+            text: role.isEmpty ? "Employee" : role,
             fontSize: 13,
             color: AppColors.white.withOpacity(0.8),
           ),
@@ -190,9 +230,9 @@ class _ProfileHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _HeaderChip(label: 'TX001'),
+              _HeaderChip(label: 'Employee Id: ${employeeId ?? 0}'),
               SizedBox(width: 10.sp),
-              _HeaderChip(label: 'Senior Developer'),
+              _HeaderChip(label: role.isEmpty ? 'Employee' : role),
               SizedBox(width: 10.sp),
               _HeaderChip(label: 'Full-Time'),
             ],
@@ -216,8 +256,7 @@ class _HeaderChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: CommonText(
-        text:
-        label,
+        text: label,
         fontSize: 11,
         color: AppColors.white,
         fontWeight: FontWeight.w500,
@@ -225,11 +264,18 @@ class _HeaderChip extends StatelessWidget {
     );
   }
 }
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.title,this.subtitle);
+
+class _SectionTitle extends StatefulWidget {
+  const _SectionTitle({super.key, required this.title, this.subtitle = ''});
+
   final String title;
   final String subtitle;
 
+  @override
+  State<_SectionTitle> createState() => _SectionTitleState();
+}
+
+class _SectionTitleState extends State<_SectionTitle> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -239,18 +285,16 @@ class _SectionTitle extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CommonText(
-            text:
-            title,
+            text: widget.title,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: AppColors.grey,
             // letterSpacing: 0.5,
           ),
           GestureDetector(
-            onTap: (){},
+            onTap: () {},
             child: CommonText(
-              text:
-              subtitle,
+              text: widget.subtitle,
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.grey,
@@ -266,27 +310,65 @@ class _SectionTitle extends StatelessWidget {
 // ══════════════════════════════════════════════
 // Info Card
 // ══════════════════════════════════════════════
-class _InfoCard extends StatelessWidget {
+class _InfoCard extends StatefulWidget {
+  @override
+  State<_InfoCard> createState() => _InfoCardState();
+}
+
+class _InfoCardState extends State<_InfoCard> {
+  String name = "";
+  String role = "";
+  String? image;
+  String? email;
+  String? number;
+  int? employeeId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+    name = await StorageService.getName() ?? "";
+    role = await StorageService.getRoleName() ?? "";
+    email = await StorageService.getEmail() ?? "";
+    number = await StorageService.getNumber() ?? "";
+    image = await StorageService.getImage();
+    employeeId = await StorageService.getLoginId() ?? 0;
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return CommonCard(
       margin: EdgeInsets.symmetric(horizontal: 16.sp),
       child: Column(
         children: [
-          _InfoRow(icon: Icons.badge_outlined,
-              label: 'Employee ID', value: 'TX001'),
+          _InfoRow(
+            icon: Icons.badge_outlined,
+            label: 'Employee ID',
+            value: employeeId.toString(),
+          ),
           _RowDivider(),
-          _InfoRow(icon: Icons.business_outlined,
-              label: 'Department', value: 'Senior Developer'),
+          _InfoRow(
+            icon: Icons.business_outlined,
+            label: 'Department',
+            value: role.toString(),
+          ),
           _RowDivider(),
-          _InfoRow(icon: Icons.email_outlined,
-              label: 'Email', value: 'Texa@company.com'),
+          _InfoRow(
+            icon: Icons.email_outlined,
+            label: 'Email',
+            value: email.toString(),
+          ),
           _RowDivider(),
-          _InfoRow(icon: Icons.phone_outlined,
-              label: 'Phone', value: '+91 98765 43210'),
-          _RowDivider(),
-          _InfoRow(icon: Icons.location_on_outlined,
-              label: 'Location', value: 'Coimbatore, TN'),
+          _InfoRow(
+            icon: Icons.phone_outlined,
+            label: 'Phone',
+            value: number.toString(),
+          ),
         ],
       ),
     );
@@ -323,11 +405,10 @@ class _InfoRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CommonText( text: label, fontSize: 12, color: AppColors.grey),
+                CommonText(text: label, fontSize: 12, color: AppColors.grey),
                 SizedBox(height: 2.sp),
                 CommonText(
-                  text:
-                  value,
+                  text: value,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textPrimary,

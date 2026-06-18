@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../controller/auth_controller.dart';
 import '../../routes/app_pages.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -18,10 +19,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool isLogin = true;
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
+  final AuthController controller = Get.put(AuthController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,13 +80,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
                 /// LOGO
                 Container(
-                  height: 16.h,
-                  width: 34.w,
+                  height: 10.h,
+                  width: 38.w,
 
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(25),
-
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black12,
@@ -100,8 +97,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
 
                   child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Image.asset("assets/logo.png", fit: BoxFit.contain),
+                    padding: const EdgeInsets.all(1),
+                    child: Image.asset("assets/logo.png", fit: BoxFit.cover),
                   ),
                 ),
 
@@ -109,7 +106,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
                 /// TITLE
                 CommonText(
-                  text: isLogin ? "Welcome Back" : "Create Account",
+                  text: widget.isAdmin
+                      ? (isLogin ? "Admin Login" : "Create Admin Account")
+                      : "Employee Login",
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
@@ -118,7 +117,11 @@ class _AuthScreenState extends State<AuthScreen> {
                 SizedBox(height: 1.h),
 
                 CommonText(
-                  text: isLogin ? "Login to continue" : "Register your account",
+                  text: widget.isAdmin
+                      ? (isLogin
+                            ? "Login to continue"
+                            : "Register your account")
+                      : "Login with employee credentials",
                   fontSize: 15.sp,
                   color: AppColors.grey,
                 ),
@@ -146,19 +149,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Column(
                     children: [
                       /// NAME FIELD
-                      if (!isLogin) ...[
-                        CommonTextFormField(
-                          controller: nameController,
-                          hintText: "Enter Full Name",
-
-                          prefixIcon: Icon(Icons.person_outline, size: 20.sp),
-                        ),
-
-                        SizedBox(height: 2.5.h),
-                      ],
 
                       CommonTextFormField(
-                        controller: emailController,
+                        controller: controller.emailController,
                         hintText: "Enter Email",
 
                         keyboardType: TextInputType.emailAddress,
@@ -169,7 +162,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       SizedBox(height: 2.5.h),
 
                       CommonTextFormField(
-                        controller: passwordController,
+                        controller: controller.passwordController,
                         hintText: "Enter Password",
                         obscureText: true,
 
@@ -179,89 +172,27 @@ class _AuthScreenState extends State<AuthScreen> {
                       SizedBox(height: 4.h),
 
                       /// BUTTON
-                      GestureDetector(
-                        onTap: () {
-                          if (!isLogin) {
-                            nameController.clear();
-                            emailController.clear();
-                            passwordController.clear();
+                      Obx(
+                            () => CommonButton(
+                          label: widget.isAdmin
+                              ? "Admin Login"
+                              : "Employee Login",
 
-                            toastification.show(
-                              autoCloseDuration: Duration(seconds: 3),
-                              context: context,
-                              alignment: Alignment.topCenter,
-                              title: CommonText(
-                                text: "Success \nRegistration Successful",
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            );
+                          isLoading: controller.isLoading.value,
 
-                            setState(() {
-                              isLogin = true;
-                            });
-                          }
-                          else {
-                            if (widget.isAdmin) {
-                              Get.offAllNamed(AppRoutes.adminBottom);
-                            } else {
-                              Get.offAllNamed(AppRoutes.employeeBottom);
-                            }
-                          }
-                        },
+                          onPressed: () => controller.login(widget.isAdmin),
 
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 2.h),
+                          height: 55,
+                          borderRadius: 18,
 
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppColors.primary, AppColors.secondary],
-                            ),
+                          color: AppColors.primary,
 
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-
-                          child: Center(
-                            child: CommonText(
-                              text: isLogin ? "LOGIN" : "REGISTER",
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.white,
-                            ),
+                          icon: Icon(
+                            Icons.arrow_forward_rounded,
+                            color: AppColors.white,
+                            size: 20,
                           ),
                         ),
-                      ),
-
-                      SizedBox(height: 3.h),
-
-                      /// SWITCH AUTH
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CommonText(
-                            text: isLogin
-                                ? "Don't have an account? "
-                                : "Already have an account? ",
-                            fontSize: 15.sp,
-                            color: AppColors.grey,
-                          ),
-
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isLogin = !isLogin;
-                              });
-                            },
-
-                            child: CommonText(
-                              text: isLogin ? "Register" : "Login",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

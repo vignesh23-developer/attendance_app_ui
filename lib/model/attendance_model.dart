@@ -1,8 +1,13 @@
-// lib/models/attendance_model.dart
-
 import 'package:flutter/material.dart';
 
-enum AttendanceStatus { present, absent, halfDay, leave, holiday }
+import '../data/const/color_theme.dart';
+
+enum AttendanceStatus {
+  present,
+  leave,
+  halfDay,
+  permission,
+}
 
 class AttendanceRecord {
   AttendanceRecord({
@@ -24,30 +29,31 @@ class AttendanceRecord {
   String get statusLabel {
     switch (status) {
       case AttendanceStatus.present:
-        return 'Present';
-      case AttendanceStatus.absent:
-        return 'Absent';
-      case AttendanceStatus.halfDay:
-        return 'Half Day';
+        return "Present";
+
       case AttendanceStatus.leave:
-        return 'Leave';
-      case AttendanceStatus.holiday:
-        return 'Holiday';
+        return "Leave";
+
+      case AttendanceStatus.halfDay:
+        return "Half Day";
+
+      case AttendanceStatus.permission:
+        return "Permission";
     }
   }
 
   Color get statusColor {
     switch (status) {
       case AttendanceStatus.present:
-        return const Color(0xFF16A34A);
-      case AttendanceStatus.absent:
-        return const Color(0xFFDC2626);
-      case AttendanceStatus.halfDay:
-        return const Color(0xFFF59E0B);
+        return AppColors.presentFg;
+
       case AttendanceStatus.leave:
-        return const Color(0xFF7C3AED);
-      case AttendanceStatus.holiday:
-        return const Color(0xFF3B82F6);
+        return AppColors.danger;
+
+      case AttendanceStatus.halfDay:
+        return AppColors.halfFg;
+      case AttendanceStatus.permission:
+        return Colors.blue;
     }
   }
 
@@ -55,13 +61,11 @@ class AttendanceRecord {
     switch (status) {
       case AttendanceStatus.present:
         return const Color(0xFFDCFCE7);
-      case AttendanceStatus.absent:
-        return const Color(0xFFFEE2E2);
       case AttendanceStatus.halfDay:
         return const Color(0xFFFEF9C3);
       case AttendanceStatus.leave:
-        return const Color(0xFFEDE9FE);
-      case AttendanceStatus.holiday:
+        return AppColors.absentBg;
+      case AttendanceStatus.permission:
         return const Color(0xFFDBEAFE);
     }
   }

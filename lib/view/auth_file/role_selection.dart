@@ -5,6 +5,7 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../data/local_storage/stroage_services.dart';
 import '../../routes/app_pages.dart';
 
 class SelectRole extends StatefulWidget {
@@ -30,7 +31,7 @@ class _SelectRoleState extends State<SelectRole> {
               SizedBox(height: 5.h),
 
               Container(
-                height: 18.h,
+                height: 10.h,
                 width: 38.w,
 
                 decoration: BoxDecoration(
@@ -47,8 +48,8 @@ class _SelectRoleState extends State<SelectRole> {
                 ),
 
                 child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Image.asset("assets/logo.png", fit: BoxFit.contain),
+                  padding: const EdgeInsets.all(1),
+                  child: Image.asset("assets/logo.png", fit: BoxFit.cover),
                 ),
               ),
 
@@ -72,7 +73,8 @@ class _SelectRoleState extends State<SelectRole> {
               SizedBox(height: 6.h),
 
               GestureDetector(
-                onTap: () {
+                onTap: () async{
+                  await StorageService.saveRole("admin");
                   Get.toNamed(AppRoutes.adminAuth);
                 },
 
@@ -148,7 +150,8 @@ class _SelectRoleState extends State<SelectRole> {
               SizedBox(height: 3.h),
 
               GestureDetector(
-                onTap: () {
+                onTap: () async{
+                  await StorageService.saveRole("employee");
                   Get.toNamed(AppRoutes.employeeAuth);
                 },
 

@@ -2,62 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:sizer/sizer.dart';
+import 'package:toastification/toastification.dart';
 
+import '../data/const/api.dart';
+import '../data/local_storage/stroage_services.dart';
 import '../model/attendance_model.dart';
+import '../model/e_leave_request_model.dart';
 
 class LeaveController extends GetxController {
-  final formKey             = GlobalKey<FormState>();
-  final toController        = TextEditingController();
-  final subjectController   = TextEditingController();
-  final reasonController    = TextEditingController();
+  final api = ApiService();
 
-  final RxString leaveType       = 'Sick Leave'.obs;
-  final Rx<DateTime?> fromDate   = Rx(null);
-  final Rx<DateTime?> toDate     = Rx(null);
-  final RxString attachmentPath  = ''.obs;
-  final RxBool isSubmitting      = false.obs;
+  final formKey = GlobalKey<FormState>();
+
+  final reasonController = TextEditingController();
+
+  final RxString leaveType = "Sick Leave".obs;
+
+  final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> toDate = Rx<DateTime?>(null);
+
+  final RxBool isSubmitting = false.obs;
+  final RxBool isLoading = false.obs;
+
+  final RxList<LeaveRequestModel> myLeaves = <LeaveRequestModel>[].obs;
 
   final List<String> leaveTypes = [
-    'Sick Leave',
-    'Casual Leave',
-    'Personal Leave',
+    "Sick Leave",
+    "Casual Leave",
+    "Personal Leave",
   ];
-
-  final RxList<LeaveRequest> myLeaves = <LeaveRequest>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    toController.text = 'hr@Texa.com';
-    _loadDummyLeaves();
+    getLeaveRequests();
   }
 
-  void _loadDummyLeaves() {
-    myLeaves.value = [
-      LeaveRequest(
-        id: 'LV001',
-        type: 'Sick Leave',
-        from: DateTime.now().subtract(const Duration(days: 10)),
-        to: DateTime.now().subtract(const Duration(days: 8)),
-        reason: 'Fever and cold',
-        status: 'approved',
-      ),
-      LeaveRequest(
-        id: 'LV002',
-        type: 'Casual Leave',
-        from: DateTime.now().add(const Duration(days: 5)),
-        to: DateTime.now().add(const Duration(days: 6)),
-        reason: 'Personal work',
-        status: 'pending',
-      ),
-    ];
+  Future<void> refreshLeaves() async {
+    await getLeaveRequests();
   }
 
-  String get fromDateLabel =>
-      fromDate.value != null ? DateFormat('dd MMM yyyy').format(fromDate.value!) : 'Select date';
+  String get fromDateLabel => fromDate.value != null
+      ? DateFormat('dd MMM yyyy').format(fromDate.value!)
+      : 'Select date';
 
-  String get toDateLabel =>
-      toDate.value != null ? DateFormat('dd MMM yyyy').format(toDate.value!) : 'Select date';
+  String get toDateLabel => toDate.value != null
+      ? DateFormat('dd MMM yyyy').format(toDate.value!)
+      : 'Select date';
 
   Future<void> pickFromDate(BuildContext context) async {
     final date = await showDatePicker(
@@ -96,60 +88,102 @@ class LeaveController extends GetxController {
     if (date != null) toDate.value = date;
   }
 
-  Future<void> pickAttachment() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
-    if (file != null) attachmentPath.value = file.path;
-  }
-
   Future<void> submitLeave() async {
     if (!formKey.currentState!.validate()) return;
+
     if (fromDate.value == null || toDate.value == null) {
-      Get.snackbar('Missing Info', 'Please select leave dates.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: const Color(0xFFDC2626),
-          colorText: Colors.white);
+      toastification.show(
+        autoCloseDuration: Duration(seconds: 3),
+        title: Text(
+          "Error: Select leave dates",
+          style: TextStyle(fontSize: 14.sp, color: Colors.white),
+        ),
+        alignment: Alignment.topCenter
+      );
       return;
     }
 
-    isSubmitting.value = true;
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      isSubmitting.value = true;
 
-    myLeaves.add(LeaveRequest(
-      id: 'LV${myLeaves.length + 1}',
-      type: leaveType.value,
-      from: fromDate.value!,
-      to: toDate.value!,
-      reason: reasonController.text,
-      status: 'pending',
-      subject: subjectController.text,
-    ));
+      final employeeId = await StorageService.getLoginId();
 
-    _resetForm();
-    isSubmitting.value = false;
+      final employeeName = await StorageService.getName();
 
-    Get.snackbar(
-      '✅ Request Sent',
-      'Your leave request has been submitted.',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: const Color(0xFF16A34A),
-      colorText: Colors.white,
-    );
+      final response = await api.postRequest(Api.leaveRequest, {
+        "employee_id": employeeId,
+        "employee_name": employeeName,
+        "leave_type": leaveType.value,
+        "from_date": DateFormat("yyyy-MM-dd").format(fromDate.value!),
+        "to_date": DateFormat("yyyy-MM-dd").format(toDate.value!),
+        "reason": reasonController.text.trim(),
+      });
+
+      if (response.data["success"] == true) {
+        Get.snackbar("Success", response.data["message"]);
+        toastification.show(
+            autoCloseDuration: Duration(seconds: 3),
+            title: Text(
+              "Error: Select leave dates",
+              style: TextStyle(fontSize: 14.sp, color: Colors.white),
+            ),
+            alignment: Alignment.topCenter
+        );
+
+        await getLeaveRequests();
+
+        reasonController.clear();
+        fromDate.value = null;
+        toDate.value = null;
+      }
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isSubmitting.value = false;
+    }
   }
 
-  void _resetForm() {
-    subjectController.clear();
-    reasonController.clear();
-    fromDate.value = null;
-    toDate.value = null;
-    attachmentPath.value = '';
-    leaveType.value = 'Sick Leave';
+  Future<void> getLeaveRequests() async {
+    try {
+      isLoading.value = true;
+
+      final employeeId = await StorageService.getLoginId();
+
+      final response = await api.postRequest(Api.requestList, {
+        "employee_id": employeeId,
+      });
+
+      final model = LeaveListResponse.fromJson(response.data);
+
+      myLeaves.value = model.data;
+    } catch (e) {
+      print(e);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> cancelLeave(int leaveRequestId) async {
+    try {
+      final employeeId = await StorageService.getLoginId();
+
+      final response = await api.postRequest(Api.cancelLeave, {
+        "employee_id": employeeId,
+        "leave_request_id": leaveRequestId,
+      });
+
+      if (response.data["success"] == true) {
+        Get.snackbar("Success", response.data["message"]);
+
+        await getLeaveRequests();
+      }
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    }
   }
 
   @override
   void onClose() {
-    toController.dispose();
-    subjectController.dispose();
     reasonController.dispose();
     super.onClose();
   }

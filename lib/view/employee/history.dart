@@ -23,41 +23,54 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CommonAppBar(title: 'Attendance History', showBack: false),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _CalendarCard(ctrl: ctrl)),
+      body: RefreshIndicator(
+        onRefresh: ctrl.refreshAttendance,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _CalendarCard(ctrl: ctrl)),
 
-          SliverToBoxAdapter(child: _SummaryRow(ctrl: ctrl)),
+            SliverToBoxAdapter(child: _SummaryRow(ctrl: ctrl)),
 
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 16.sp),
-            sliver: Obx(() {
-              final list = ctrl.filtered;
-              if (list.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16.sp),
+              sliver: Obx(() {
+                if (ctrl.isLoading.value) {
+                  return const SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CommonText(
-                        text: 'No records found',
-                        fontSize: 15,
-                        color: AppColors.grey,
+                      padding: EdgeInsets.all(30),
+                      child: Center(
+                        child: CircularProgressIndicator(),
                       ),
                     ),
+                  );
+                }
+                final list = ctrl.filtered;
+                if (list.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CommonText(
+                          text: 'No records found',
+                          fontSize: 15,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _AttendanceCard(record: list[i], isFirst: i == 0),
+                    childCount: list.length,
                   ),
                 );
-              }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => _AttendanceCard(record: list[i], isFirst: i == 0),
-                  childCount: list.length,
-                ),
-              );
-            }),
-          ),
+              }),
+            ),
 
-          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -66,6 +79,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 // ══════════════════════════════════════════════
 // Summary Row
 // ══════════════════════════════════════════════
+
 class _SummaryRow extends StatelessWidget {
   const _SummaryRow({required this.ctrl});
   final AttendanceController ctrl;
@@ -82,27 +96,65 @@ class _SummaryRow extends StatelessWidget {
               count: ctrl.presentCount,
               color: AppColors.presentFg,
               bg: AppColors.presentBg,
+              isSelected:
+              ctrl.selectedFilter.value == AttendanceStatus.present,
+              onTap: () {
+                ctrl.selectedFilter.value =
+                ctrl.selectedFilter.value == AttendanceStatus.present
+                    ? null
+                    : AttendanceStatus.present;
+              },
             ),
+
             SizedBox(width: 8.sp),
+
             _SummaryChip(
-              label: 'Absent',
-              count: ctrl.absentCount,
-              color: AppColors.absentFg,
-              bg: AppColors.absentBg,
+              label: 'Permission',
+              count: ctrl.permissionCount,
+              color: AppColors.permissionFg,
+              bg: AppColors.permissionBg,
+              isSelected:
+              ctrl.selectedFilter.value == AttendanceStatus.permission,
+              onTap: () {
+                ctrl.selectedFilter.value =
+                ctrl.selectedFilter.value == AttendanceStatus.permission
+                    ? null
+                    : AttendanceStatus.permission;
+              },
             ),
+
             SizedBox(width: 8.sp),
+
             _SummaryChip(
               label: 'Leave',
               count: ctrl.leaveCount,
               color: AppColors.leaveFg,
               bg: AppColors.leaveBg,
+              isSelected:
+              ctrl.selectedFilter.value == AttendanceStatus.leave,
+              onTap: () {
+                ctrl.selectedFilter.value =
+                ctrl.selectedFilter.value == AttendanceStatus.leave
+                    ? null
+                    : AttendanceStatus.leave;
+              },
             ),
+
             SizedBox(width: 8.sp),
+
             _SummaryChip(
               label: 'Half Day',
               count: ctrl.halfDayCount,
               color: AppColors.halfFg,
               bg: AppColors.halfBg,
+              isSelected:
+              ctrl.selectedFilter.value == AttendanceStatus.halfDay,
+              onTap: () {
+                ctrl.selectedFilter.value =
+                ctrl.selectedFilter.value == AttendanceStatus.halfDay
+                    ? null
+                    : AttendanceStatus.halfDay;
+              },
             ),
           ],
         ),
@@ -113,36 +165,55 @@ class _SummaryRow extends StatelessWidget {
 
 class _SummaryChip extends StatelessWidget {
   const _SummaryChip({
+    super.key,
     required this.label,
     required this.count,
     required this.color,
     required this.bg,
+    required this.onTap,
+    required this.isSelected,
   });
+
   final String label;
   final int count;
   final Color color;
   final Color bg;
+  final VoidCallback onTap;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            CommonText(
-              text: '$count',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border.all(
               color: color,
-            ),
-            const SizedBox(height: 2),
-            CommonText(text: label, fontSize: 11, color: color),
-          ],
+              width: 2,
+            )
+                : null,
+          ),
+          child: Column(
+            children: [
+              CommonText(
+                text: '$count',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              const SizedBox(height: 2),
+              CommonText(
+                text: label,
+                fontSize: 11,
+                color: color,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -162,7 +233,7 @@ class _CalendarCard extends StatelessWidget {
       final month = ctrl.selectedMonth.value;
       final firstDay = DateTime(month.year, month.month, 1);
       final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-      final startWeekday = firstDay.weekday % 7; // 0=Sun
+      final startWeekday = firstDay.weekday % 7;
 
       return CommonCard(
         margin: EdgeInsets.all(16.sp),
@@ -233,7 +304,16 @@ class _CalendarCard extends StatelessWidget {
                   day: day,
                   status: status,
                   isToday: isToday,
-                  onTap: () => ctrl.selectedDay.value = date,
+                  onTap: () {
+                    if (ctrl.selectedDay.value != null &&
+                        ctrl.selectedDay.value!.year == date.year &&
+                        ctrl.selectedDay.value!.month == date.month &&
+                        ctrl.selectedDay.value!.day == date.day) {
+                      ctrl.selectedDay.value = null;
+                    } else {
+                      ctrl.selectedDay.value = date;
+                    }
+                  },
                 );
               },
             ),

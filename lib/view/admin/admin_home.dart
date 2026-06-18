@@ -1,438 +1,480 @@
+import 'package:attandance_app/view/admin/add_employee.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:sizer/sizer.dart';
-
+import '../../controller/dashboard_controller.dart';
 import '../../data/const/color_theme.dart';
 
 class AdminHome extends StatefulWidget {
-  const AdminHome({super.key});
+  final Function(int)? onTabChange;
+  const AdminHome({super.key, this.onTabChange});
 
   @override
   State<AdminHome> createState() => _AdminHomeState();
 }
 
 class _AdminHomeState extends State<AdminHome> {
-
-  final int totalEmployees = 30;
-  final int presentEmployees = 24;
-  final int absentEmployees = 2;
-  final int permissionEmployees = 1;
-  final int leaveEmployees = 3;
-  final int halfDayEmployees = 1;
-  final int lateEmployees = 4;
+  final DashboardController dashboardController = Get.put(
+    DashboardController(),
+  );
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FC),
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: 16.sp),
-
-          child: Column(
-            children: [
-
-              /// =====================================================
-              /// HEADER
-              /// =====================================================
-
-              Container(
-                width: double.infinity,
-
-                padding: EdgeInsets.fromLTRB(
-                  16.sp,
-                  16.sp,
-                  16.sp,
-                  20.sp,
+      body: Obx(() {
+        if (dashboardController.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(18.sp, 7.h, 18.sp, 23.sp),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(35),
+                  bottomRight: Radius.circular(35),
                 ),
+              ),
+              child: Column(
+                children: [
+                  /// TOP BAR
+                  Row(
+                    children: [
+                      Container(
+                        width: 13.w,
+                        height: 6.h,
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: AppColors.white70,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Image.asset(
+                          "assets/white-logo.png",
+                          fit: BoxFit.contain,
+                        ),
+                      ),
 
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                      SizedBox(width: 15.sp),
 
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(26),
-                    bottomRight: Radius.circular(26),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CommonText(
+                              text: "Texa Innovates",
+                              color: AppColors.white,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+
+                            CommonText(
+                              text: "Attendance Management",
+                              color: AppColors.white,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Container(
+                      //   padding: EdgeInsets.all(10.sp),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.white24,
+                      //     borderRadius: BorderRadius.circular(15),
+                      //   ),
+                      //   child: Icon(
+                      //     Icons.notifications_none,
+                      //     color: Colors.white,
+                      //     size: 20.sp,
+                      //   ),
+                      // ),
+                    ],
                   ),
-                ),
 
+                  SizedBox(height: 20.sp),
+
+                  /// ADMIN CARD
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16.sp),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(.12),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20.w,
+                          height: 7.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Icon(
+                            Icons.groups_rounded,
+                            color: Colors.white,
+                            size: 28.sp,
+                          ),
+                        ),
+
+                        SizedBox(width: 14.sp),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CommonText(
+                                text:
+                                    "${dashboardController.dashboard.value?.totalEmployees ?? 0}",
+                                color: Colors.white,
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+
+                              CommonText(
+                                text: "Registered Employees",
+                                color: AppColors.white,
+                                fontSize: 13.sp,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 18.sp),
+
+            /// TODAY STATUS CARD
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.sp),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(18.sp),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: AppColors.primary),
 
-                    CommonText(
-                      text: "Admin Dashboard",
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.white,
+                        SizedBox(width: 8.sp),
+
+                        CommonText(
+                          text: "Today's Workforce Status",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.sp,
+                        ),
+                      ],
                     ),
 
-                    SizedBox(height: 3.sp),
+                    SizedBox(height: 15.sp),
 
-                    CommonText(
-                      text: "Attendance Overview",
-                      fontSize: 14.sp,
-                      color:
-                      AppColors.white.withOpacity(0.85),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoTile(
+                            title: "Present",
+                            value:
+                                "${dashboardController.dashboard.value?.presentCount ?? 0}",
+                            color: Colors.green,
+                          ),
+                        ),
+
+                        SizedBox(width: 10.sp),
+
+                        Expanded(
+                          child: _InfoTile(
+                            title: "Absent",
+                            value:
+                                "${dashboardController.dashboard.value?.leaveCount ?? 0}",
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
 
-                    SizedBox(height: 18.sp),
+                    SizedBox(height: 10.sp),
 
-                    /// TOTAL EMPLOYEE CARD
-
-                    Container(
-                      width: double.infinity,
-
-                      padding: EdgeInsets.all(14.sp),
-
-                      decoration: BoxDecoration(
-                        color:
-                        AppColors.white.withOpacity(0.10),
-
-                        borderRadius:
-                        BorderRadius.circular(22),
-                      ),
-
-                      child: Row(
-                        children: [
-
-                          Container(
-                            width: 14.w,
-                            height: 14.w,
-
-                            decoration: BoxDecoration(
-                              color: AppColors.white
-                                  .withOpacity(0.14),
-
-                              borderRadius:
-                              BorderRadius.circular(16),
-                            ),
-
-                            child: Icon(
-                              Icons.groups_rounded,
-                              color: AppColors.white,
-                              size: 20.sp,
-                            ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoTile(
+                            title: "Permission",
+                            value:
+                                "${dashboardController.dashboard.value?.permissionCount ?? 0}",
+                            color: Colors.orange,
                           ),
+                        ),
 
-                          SizedBox(width: 12.sp),
+                        SizedBox(width: 10.sp),
 
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-
-                              children: [
-
-                                CommonText(
-                                  text:
-                                  totalEmployees.toString(),
-                                  fontSize: 21.sp,
-                                  fontWeight:
-                                  FontWeight.w700,
-                                  color:
-                                  AppColors.white,
-                                ),
-
-                                SizedBox(height: 2.sp),
-
-                                CommonText(
-                                  text:
-                                  "Total Employees",
-                                  fontSize: 14.sp,
-                                  color: AppColors.white
-                                      .withOpacity(0.85),
-                                ),
-                              ],
-                            ),
+                        Expanded(
+                          child: _InfoTile(
+                            title: "Half Day",
+                            value:
+                                "${dashboardController.dashboard.value?.halfDayCount ?? 0}",
+                            color: Colors.blue,
                           ),
-
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 10.sp,
-                              vertical: 6.sp,
-                            ),
-
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-
-                              borderRadius:
-                              BorderRadius.circular(12),
-                            ),
-
-                            child: CommonText(
-                              text: "Live",
-                              fontSize: 13.sp,
-                              fontWeight:
-                              FontWeight.w600,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+            ),
 
-              SizedBox(height: 18.sp),
-
-              /// =====================================================
-              /// SUMMARY TITLE
-              /// =====================================================
-
-              Padding(
-                padding:
-                EdgeInsets.symmetric(horizontal: 16.sp),
-
-                child: Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
-
-                  children: [
-
-                    CommonText(
-                      text: "Today's Summary",
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-
-                    CommonText(
-                      text: "Updated Now",
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ],
+            SizedBox(height: 15.sp),
+            Row(
+              children: [
+                SizedBox(width: 17.sp),
+                CommonText(
+                  text: "Quick Access",
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.black,
                 ),
+              ],
+            ),
+            SizedBox(height: 15.sp),
+
+            /// QUICK ACTIONS
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.sp),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.person_add_alt_1,
+                      title: "Add Employee",
+                      onTab: () {
+                        Get.to(() => AddEmployeeScreen());
+                      },
+                    ),
+                  ),
+
+                  SizedBox(width: 12.sp),
+
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.assignment,
+                      title: "Attendance",
+                      onTab: () {
+                        widget.onTabChange?.call(1);
+                      },
+                    ),
+                  ),
+
+                  SizedBox(width: 12.sp),
+
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.bar_chart,
+                      title: "Reports",
+                      onTab: () {
+                        widget.onTabChange?.call(2);
+                      },
+                    ),
+                  ),
+                ],
               ),
+            ),
 
-              SizedBox(height: 14.sp),
+            // SizedBox(height: 22.sp),
+            //
+            // Padding(
+            //   padding: EdgeInsets.symmetric(
+            //     horizontal: 16.sp,
+            //   ),
+            //   child: Row(
+            //     mainAxisAlignment:
+            //     MainAxisAlignment.spaceBetween,
+            //     children: [
+            //
+            //       CommonText(
+            //         text: "Employee Summary",
+            //         fontWeight: FontWeight.bold,
+            //         fontSize: 15.sp,
+            //       ),
+            //
+            //       CommonText(
+            //         text: "Live Updates",
+            //         color: AppColors.primary,
+            //         fontWeight: FontWeight.w600,
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            //
+            // SizedBox(height: 14.sp),
+            //
+            // /// GRID
+            // Padding(
+            //   padding: EdgeInsets.symmetric(
+            //     horizontal: 16.sp,
+            //   ),
+            //   child: GridView.count(
+            //     shrinkWrap: true,
+            //     physics:
+            //     const NeverScrollableScrollPhysics(),
+            //     crossAxisCount: 2,
+            //     crossAxisSpacing: 12.sp,
+            //     mainAxisSpacing: 12.sp,
+            //     childAspectRatio: 1.05,
+            //     children: [
+            //
+            //       _SummaryCard(
+            //         title: "Present",
+            //         value: "$presentEmployees",
+            //         icon: Icons.check_circle,
+            //         color: Colors.green,
+            //         bgColor:
+            //         Colors.green.withOpacity(.1),
+            //       ),
+            //
+            //       _SummaryCard(
+            //         title: "Absent",
+            //         value: "$absentEmployees",
+            //         icon: Icons.cancel,
+            //         color: Colors.red,
+            //         bgColor:
+            //         Colors.red.withOpacity(.1),
+            //       ),
+            //
+            //       _SummaryCard(
+            //         title: "Permission",
+            //         value: "$permissionEmployees",
+            //         icon: Icons.timelapse,
+            //         color: Colors.orange,
+            //         bgColor:
+            //         Colors.orange.withOpacity(.1),
+            //       ),
+            //
+            //       _SummaryCard(
+            //         title: "Leave",
+            //         value: "$leaveEmployees",
+            //         icon: Icons.event_busy,
+            //         color: Colors.blue,
+            //         bgColor:
+            //         Colors.blue.withOpacity(.1),
+            //       ),
+            //
+            //       _SummaryCard(
+            //         title: "Half Day",
+            //         value: "$halfDayEmployees",
+            //         icon: Icons.access_time,
+            //         color: Colors.purple,
+            //         bgColor:
+            //         Colors.purple.withOpacity(.1),
+            //       ),
+            //
+            //       _SummaryCard(
+            //         title: "Late",
+            //         value: "$lateEmployees",
+            //         icon: Icons.pending_actions,
+            //         color: Colors.deepOrange,
+            //         bgColor:
+            //         Colors.deepOrange.withOpacity(.1),
+            //       ),
+            //     ],
+            //   ),
+            // ),
+          ],
+        );
+      }),
+    );
+  }
+}
 
-              /// =====================================================
-              /// SUMMARY GRID
-              /// =====================================================
+class _InfoTile extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color color;
 
-              Padding(
-                padding:
-                EdgeInsets.symmetric(horizontal: 16.sp),
+  const _InfoTile({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
-                child: GridView.count(
-                  shrinkWrap: true,
-
-                  physics:
-                  const NeverScrollableScrollPhysics(),
-
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12.sp,
-                  mainAxisSpacing: 12.sp,
-                  childAspectRatio: 1.25,
-
-                  children: [
-
-                    _SummaryCard(
-                      title: "Present",
-                      value:
-                      presentEmployees.toString(),
-                      icon:
-                      Icons.check_circle_rounded,
-                      color:
-                      AppColors.presentFg,
-                      bgColor:
-                      AppColors.presentBg,
-                    ),
-
-                    _SummaryCard(
-                      title: "Absent",
-                      value:
-                      absentEmployees.toString(),
-                      icon:
-                      Icons.cancel_rounded,
-                      color:
-                      AppColors.absentFg,
-                      bgColor:
-                      AppColors.absentBg,
-                    ),
-
-                    _SummaryCard(
-                      title: "Permission",
-                      value:
-                      permissionEmployees.toString(),
-                      icon:
-                      Icons.timelapse_rounded,
-                      color:
-                      AppColors.halfFg,
-                      bgColor:
-                      AppColors.halfBg,
-                    ),
-
-                    _SummaryCard(
-                      title: "Leave",
-                      value:
-                      leaveEmployees.toString(),
-                      icon:
-                      Icons.event_busy_rounded,
-                      color:
-                      AppColors.leaveFg,
-                      bgColor:
-                      AppColors.leaveBg,
-                    ),
-
-                    _SummaryCard(
-                      title: "Half Day",
-                      value:
-                      halfDayEmployees.toString(),
-                      icon:
-                      Icons.access_time_filled_rounded,
-                      color:
-                      AppColors.info,
-                      bgColor:
-                      AppColors.info.withOpacity(0.12),
-                    ),
-
-                    _SummaryCard(
-                      title: "Late",
-                      value:
-                      lateEmployees.toString(),
-                      icon:
-                      Icons.pending_actions_rounded,
-                      color:
-                      AppColors.danger,
-                      bgColor:
-                      AppColors.danger.withOpacity(0.12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(14.sp),
+      decoration: BoxDecoration(
+        color: color.withOpacity(.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-        ),
+          SizedBox(height: 4.sp),
+          Text(title),
+        ],
       ),
     );
   }
 }
 
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-  });
-
-  final String title;
-  final String value;
+class _QuickActionCard extends StatelessWidget {
   final IconData icon;
-  final Color color;
-  final Color bgColor;
+  final String title;
+  final VoidCallback? onTab;
+
+  const _QuickActionCard({required this.icon, required this.title, this.onTab});
 
   @override
   Widget build(BuildContext context) {
-
-    return Container(
-      padding: EdgeInsets.all(12.sp),
-
-      decoration: BoxDecoration(
-        color: AppColors.white,
-
-        borderRadius:
-        BorderRadius.circular(20),
-
-        border: Border.all(
-          color: AppColors.border,
+    return GestureDetector(
+      onTap: onTab,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 16.sp),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
         ),
-
-        boxShadow: [
-          BoxShadow(
-            color:
-            AppColors.black.withOpacity(0.03),
-
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-
-      child: Column(
-        children: [
-
-          /// TOP SECTION
-          Row(
-            mainAxisAlignment:
-            MainAxisAlignment.spaceBetween,
-
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-            children: [
-
-              Container(
-                width: 42,
-                height: 42,
-
-                decoration: BoxDecoration(
-                  color: bgColor,
-
-                  borderRadius:
-                  BorderRadius.circular(14),
-                ),
-
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 18.sp,
-                ),
-              ),
-
-              Container(
-                width: 9,
-                height: 9,
-
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ),
-
-          /// PUSH CONTENT TO BOTTOM
-          const Spacer(),
-
-          /// VALUE & TITLE
-          Align(
-            alignment: Alignment.bottomRight,
-
-            child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.end,
-
-              children: [
-
-                CommonText(
-                  text: value,
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-
-                SizedBox(height: 2.sp),
-
-                CommonText(
-                  text: title,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.greyDark,
-                ),
-              ],
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 24.sp),
+            SizedBox(height: 8.sp),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

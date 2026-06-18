@@ -1,11 +1,17 @@
+import 'package:attandance_app/controller/history_controller.dart';
+import 'package:attandance_app/controller/home_controller.dart';
+import 'package:attandance_app/controller/leave_controller.dart';
 import 'package:attandance_app/data/const/color_theme.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 
 import 'admin/admin_home.dart';
 import 'admin/employee_list.dart';
+import 'admin/leave_recived.dart';
 import 'admin/profile.dart';
+
 import 'employee/history.dart';
 import 'employee/home_page.dart';
 import 'employee/leave_request.dart';
@@ -24,7 +30,6 @@ class BottomNavScreen extends StatefulWidget {
 }
 
 class _BottomNavScreenState extends State<BottomNavScreen> {
-
   int currentIndex = 0;
 
   late final List<Widget> adminPages;
@@ -35,130 +40,116 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     super.initState();
 
     adminPages = [
-      AdminHome(),
-      EmployeeListScreen(),
-      const DashboardPage(title: "Reports"),
-      AttendanceProfileScreen(),
+      AdminHome(
+        onTabChange: (index) {
+          _changeTab(index);
+        },
+      ),
+      const EmployeeListScreen(),
+      const LeaveRequestReceivedScreen(),
+      const AdminProfileScreen(),
     ];
 
     employeePages = [
-      HomeScreen(),
-      AttendanceHistoryScreen(),
-      LeaveRequestScreen(),
-      ProfileScreen()
+      const HomeScreen(),
+      const AttendanceHistoryScreen(),
+      const LeaveRequestScreen(),
+      const ProfileScreen(),
     ];
+  }
+
+  Future<void> _changeTab(int index) async {
+    setState(() {
+      currentIndex = index;
+    });
+
+    if (widget.isAdmin) return;
+
+    try {
+      switch (index) {
+        case 0:
+          if (Get.isRegistered<HomeController>()) {
+            await Get.find<HomeController>();
+          }
+          break;
+
+        case 1:
+          if (Get.isRegistered<AttendanceController>()) {
+            await Get.find<AttendanceController>()
+                .getAttendanceHistory();
+          }
+          break;
+
+        case 2:
+          if (Get.isRegistered<LeaveController>()) {
+            await Get.find<LeaveController>()
+                .getLeaveRequests();
+          }
+          break;
+        case 3:
+          break;
+      }
+    } catch (e) {
+      debugPrint("Tab Refresh Error: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final pages = widget.isAdmin
         ? adminPages
         : employeePages;
 
     return Scaffold(
-
       backgroundColor: AppColors.background,
 
-      body: pages[currentIndex],
-
-      bottomNavigationBar: CurvedNavigationBar(
-
+      body: IndexedStack(
         index: currentIndex,
-
-        height: 8.h,
-
-        backgroundColor: Colors.transparent,
-
-        color: AppColors.primary,
-
-        buttonBackgroundColor: AppColors.secondary,
-
-        animationDuration: const Duration(
-          milliseconds: 300,
-        ),
-
-        items: [
-
-          Icon(
-            Icons.home,
-            color: AppColors.white,
-            size: 22.sp,
-          ),
-
-          Icon(
-            widget.isAdmin
-                ? Icons.people
-                : Icons.history,
-            color: AppColors.white,
-            size: 22.sp,
-          ),
-
-          Icon(
-            widget.isAdmin
-                ? Icons.bar_chart
-                : Icons.receipt_long_sharp,
-            color: AppColors.white,
-            size: 22.sp,
-          ),
-
-          Icon(
-            Icons.person,
-            color: AppColors.white,
-            size: 22.sp,
-          ),
-        ],
-
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
+        children: pages,
       ),
-    );
-  }
-}
 
-/// ======================================
-/// COMMON PAGE UI
-/// ======================================
-
-class DashboardPage extends StatelessWidget {
-
-  final String title;
-
-  const DashboardPage({
-    super.key,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Container(
-          margin: EdgeInsets.all(5.w),
-          padding: EdgeInsets.all(6.w),
-
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(25),
-
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+      bottomNavigationBar: SafeArea(
+        child: CurvedNavigationBar(
+          index: currentIndex,
+          height: 6.5.h,
+          backgroundColor: Colors.transparent,
+          color: AppColors.primary,
+          buttonBackgroundColor: AppColors.secondary,
+          animationDuration: const Duration(
+            milliseconds: 300,
           ),
 
-          child: CommonText(
-            text: title,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
+          items: [
+            Icon(
+              Icons.home,
+              color: AppColors.white,
+              size: 22.sp,
+            ),
+
+            Icon(
+              widget.isAdmin
+                  ? Icons.people
+                  : Icons.history,
+              color: AppColors.white,
+              size: 22.sp,
+            ),
+
+            Icon(
+              widget.isAdmin
+                  ? Icons.assignment
+                  : Icons.receipt_long,
+              color: AppColors.white,
+              size: 22.sp,
+            ),
+
+            Icon(
+              Icons.person,
+              color: AppColors.white,
+              size: 22.sp,
+            ),
+          ],
+
+          onTap: _changeTab,
         ),
       ),
     );

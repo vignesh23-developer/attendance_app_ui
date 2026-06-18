@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../view/auth_file/auth_screen.dart';
 import '../view/auth_file/role_selection.dart';
 import '../view/dashboard.dart';
-import '../view/employee/history.dart';
 import 'binding.dart';
 
 class AppRoutes {

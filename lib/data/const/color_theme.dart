@@ -4,7 +4,7 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:sizer/sizer.dart';
 
 class AppColors {
-  static const Color primary   = Color(0xFF730323);
+  static const Color primary = Color(0xFF730323);
   static const Color secondary = Color(0xFF8A1F3C);
 
   // ── Gradients ──────────────────────────────────────────
@@ -22,31 +22,36 @@ class AppColors {
 
   // ── Semantic ───────────────────────────────────────────
   static const Color success = Color(0xFF16A34A);
-  static const Color danger  = Color(0xFFDC2626);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color bgLightDanger = Color(0xFFEF6B6B);
   static const Color warning = Color(0xFFF59E0B);
-  static const Color info    = Color(0xFF3B82F6);
+  static const Color info = Color(0xFF3B82F6);
+  static const Color transparent = Colors.transparent;
+  static const Color white70 = Colors.white30;
 
   // ── Neutrals ───────────────────────────────────────────
-  static const Color background  = Color(0xFFF8FAFC);
-  static const Color surface     = Color(0xFFFFFFFF);
-  static const Color border      = Color(0xFFE2E8F0);
-  static const Color white       = Color(0xFFFFFFFF);
-  static const Color black       = Color(0xFF0F172A);
-  static const Color grey        = Color(0xFF94A3B8);
-  static const Color greyLight   = Color(0xFFCBD5E1);
-  static const Color greyDark    = Color(0xFF475569);
+  static const Color background = Color(0xFFF8FAFC);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE2E8F0);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF94A3B8);
+  static const Color greyLight = Color(0xFFCBD5E1);
+  static const Color greyDark = Color(0xFF475569);
   static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecond  = Color(0xFF64748B);
+  static const Color textSecond = Color(0xFF64748B);
 
   // ── Status chips ───────────────────────────────────────
-  static const Color presentBg  = Color(0xFFDCFCE7);
-  static const Color presentFg  = Color(0xFF15803D);
-  static const Color absentBg   = Color(0xFFFEE2E2);
-  static const Color absentFg   = Color(0xFFB91C1C);
-  static const Color halfBg     = Color(0xFFFEF9C3);
-  static const Color halfFg     = Color(0xFFCA8A04);
-  static const Color leaveBg    = Color(0xFFEDE9FE);
-  static const Color leaveFg    = Color(0xFF7C3AED);
+  static const Color presentBg = Color(0xFFDCFCE7);
+  static const Color presentFg = Color(0xFF15803D);
+  static const Color permissionBg = Color(0xFFDBEAFE);
+  static const Color permissionFg = Color(0xFF2563EB);
+  static const Color absentBg = Color(0xFFFEE2E2);
+  static const Color absentFg = Color(0xFFB91C1C);
+  static const Color halfBg = Color(0xFFFEF9C3);
+  static const Color halfFg = Color(0xFFCA8A04);
+  static const Color leaveBg = Color(0xFFEDE9FE);
+  static const Color leaveFg = Color(0xFF7C3AED);
 }
 
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -58,6 +63,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.backgroundColor,
     this.titleColor,
+    this.leading,
   });
 
   final String title;
@@ -66,6 +72,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final PreferredSizeWidget? bottom;
   final Color? backgroundColor;
   final Color? titleColor;
+  final Widget? leading;
 
   @override
   Size get preferredSize =>
@@ -74,24 +81,26 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: backgroundColor ?? AppColors.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: showBack
           ? IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-        color: AppColors.textPrimary,
-        onPressed: () => Get.back(),
-      )
+              icon: Icon(Icons.arrow_back_rounded, size: 20.sp),
+              color: AppColors.white,
+              onPressed: () => Get.back(),
+            )
           : null,
       title: CommonText(
-        text:title,
+        text: title,
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: titleColor ?? AppColors.textPrimary,
       ),
       actions: actions,
-      bottom: bottom ??
+      bottom:
+          bottom ??
           const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1, color: AppColors.border),
@@ -136,7 +145,8 @@ class CommonCard extends StatelessWidget {
           gradient: gradient,
           borderRadius: BorderRadius.circular(borderRadius ?? 16),
           border: border ?? Border.all(color: AppColors.border),
-          boxShadow: shadow ??
+          boxShadow:
+              shadow ??
               [
                 BoxShadow(
                   color: AppColors.black.withOpacity(0.04),
@@ -182,7 +192,7 @@ class CommonText extends StatelessWidget {
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
-        overflow: overflow
+        overflow: overflow,
       ),
     );
   }
@@ -234,32 +244,32 @@ class CommonButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 14),
             side: outlined
-                ? BorderSide(color: borderColor ?? AppColors.primary, width: 1.5)
+                ? BorderSide(
+                    color: borderColor ?? AppColors.primary,
+                    width: 1.5,
+                  )
                 : BorderSide.none,
           ),
         ),
         child: isLoading
             ? SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            color: fg,
-          ),
-        )
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: fg),
+              )
             : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[icon!, SizedBox(width: 8.sp)],
-            CommonText(
-              text:label,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: fg,
-            ),
-          ],
-        ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[icon!, SizedBox(width: 8.sp)],
+                  CommonText(
+                    text: label,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: fg,
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -305,9 +315,7 @@ class CommonTextFormField extends StatelessWidget {
         labelText: labelText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,

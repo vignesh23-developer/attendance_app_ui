@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import '../../controller/home_controller.dart';
 import '../../data/const/color_theme.dart';
+import '../../data/local_storage/stroage_services.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,14 +32,46 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   const _Header({required this.ctrl});
   final HomeController ctrl;
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> {
+  String name = "";
+
+  String getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour < 12) {
+      return "Good Morning 👋";
+    } else if (hour < 17) {
+      return "Good Afternoon ☀️";
+    } else if (hour < 21) {
+      return "Good Evening 🌇";
+    } else {
+      return "Good Night 🌙";
+    }
+  }
+
+  @override
+  void initState() {
+    loadUser();
+    super.initState();
+  }
+
+  Future<void> loadUser() async {
+    name = await StorageService.getName() ?? "";
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20.sp, 30.sp, 20.sp, 15.sp),
+      padding: EdgeInsets.fromLTRB(20.sp, 27.sp, 20.sp, 10.sp),
       decoration: const BoxDecoration(
         gradient: AppColors.primaryGradient,
       ),
@@ -58,7 +91,7 @@ class _Header extends StatelessWidget {
                   color: AppColors.white.withOpacity(0.2),
                 ),
                 child: const Icon(
-                  Icons.person_rounded,
+                  Icons.notifications_active,
                   color: AppColors.white,
                   size: 26,
                 ),
@@ -69,12 +102,12 @@ class _Header extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CommonText(text:
-                      'Good Morning 👋',
+                    getGreeting(),
                       fontSize: 14.sp,
                       color: AppColors.white.withOpacity(0.8),
                     ),
                     CommonText(text:
-                      'Vigneshwaran',
+                      name ?? "N/A",
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.white,
@@ -82,18 +115,57 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
+              Container(
+                  width: 25.w,
+                  height: 6.h,
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    // color: AppColors.white70,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Image.asset(
+                    "assets/white-logo.png",
+                    fit: BoxFit.contain,
+                  )
+              ),
             ],
           ),
+
         ],
       ),
     );
   }
 }
 
-class _ClockCard extends StatelessWidget {
+class _ClockCard extends StatefulWidget {
   const _ClockCard({required this.ctrl});
   final HomeController ctrl;
 
+  @override
+  State<_ClockCard> createState() => _ClockCardState();
+}
+
+class _ClockCardState extends State<_ClockCard> {
+  String name = "";
+  String role = "";
+  String? image;
+  int? employeeId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+    name = await StorageService.getName() ?? "";
+    role = await StorageService.getRoleName() ?? "";
+    image = await StorageService.getImage();
+    employeeId = await StorageService.getLoginId() ?? 0;
+
+
+    setState(() {});
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -116,14 +188,14 @@ class _ClockCard extends StatelessWidget {
             child: Column(
               children: [
                 Obx(() => CommonText(text:
-                  ctrl.currentTime.value,
+                  widget.ctrl.currentTime.value,
                   fontSize: 42,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 )),
                 SizedBox(height: 4.sp),
                 Obx(() => CommonText(text:
-                  ctrl.currentDate.value,
+                  widget.ctrl.currentDate.value,
                   fontSize: 14,
                   color: AppColors.textSecond,
                 )),
@@ -142,19 +214,21 @@ class _ClockCard extends StatelessWidget {
             padding: EdgeInsets.symmetric(
                 horizontal: 20.sp, vertical: 12.sp),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _InfoChip(
                   icon: Icons.badge_outlined,
-                  label: 'MZ001234',
+                  label: "Id: ${employeeId.toString()}",
+
                 ),
                 _InfoChip(
                   icon: Icons.business_outlined,
-                  label: 'Engineering',
+                  label: role.toString(),
                 ),
                 Obx(() => _InfoChip(
                   icon: Icons.location_on_outlined,
-                  label: ctrl.currentLocation.value,
+                  label: widget.ctrl.currentLocation.value,
                 )),
               ],
             ),
@@ -236,31 +310,44 @@ class _PunchSection extends StatelessWidget {
   }
 }
 
-class _AnimatedPunchButton extends StatelessWidget {
+class _AnimatedPunchButton extends StatefulWidget {
   const _AnimatedPunchButton({required this.ctrl});
 
   final HomeController ctrl;
+
+  @override
+  State<_AnimatedPunchButton> createState() => _AnimatedPunchButtonState();
+}
+
+class _AnimatedPunchButtonState extends State<_AnimatedPunchButton> {
 
   @override
   Widget build(BuildContext context) {
 
     return Obx(() {
 
-      final isIn = ctrl.isCheckedIn.value;
+      final isIn = widget.ctrl.isCheckedIn.value;
+      final isReady = widget.ctrl.isReadyForAttendance.value;
 
       return GestureDetector(
 
-        onTap: ctrl.isLoading.value
+        onTap: (!isReady || widget.ctrl.isLoading.value)
             ? null
-            : ctrl.onPunchTap,
+            : () async {
+          if (widget.ctrl.isCheckedIn.value) {
+            await widget.ctrl.openCameraForCheckOut();
+          } else {
+            await widget.ctrl.openCameraForCheckIn();
+          }
+        },
 
         child: AnimatedBuilder(
 
-          animation: ctrl.pulseAnim,
+          animation: widget.ctrl.pulseAnim,
 
           builder: (_, child) => Transform.scale(
             scale: isIn
-                ? ctrl.pulseAnim.value
+                ? widget.ctrl.pulseAnim.value
                 : 1.0,
             child: child,
           ),
@@ -273,7 +360,7 @@ class _AnimatedPunchButton extends StatelessWidget {
             child: CustomPaint(
 
               painter: _RingPainter(
-                progress: ctrl.progressPercent.value,
+                progress: widget.ctrl.progressPercent.value,
                 isCheckedIn: isIn,
               ),
 
@@ -288,7 +375,12 @@ class _AnimatedPunchButton extends StatelessWidget {
                     shape: BoxShape.circle,
 
                     gradient: LinearGradient(
-                      colors: isIn
+                      colors: !isReady
+                          ? [
+                        Colors.grey,
+                        Colors.grey.shade600,
+                      ]
+                          : isIn
                           ? [
                         AppColors.success,
                         const Color(0xFF22C55E),
@@ -313,7 +405,7 @@ class _AnimatedPunchButton extends StatelessWidget {
                     ],
                   ),
 
-                  child: ctrl.isLoading.value
+                  child: widget.ctrl.isLoading.value
 
                       ? const Center(
                     child: CircularProgressIndicator(
@@ -341,10 +433,11 @@ class _AnimatedPunchButton extends StatelessWidget {
                       const SizedBox(height: 6),
 
                       CommonText(
-                        text: isIn
+                        text: !isReady
+                            ? 'ALLOW ACCESS'
+                            : isIn
                             ? 'CHECK OUT'
                             : 'CHECK IN',
-
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppColors.white,
@@ -405,43 +498,6 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) =>
       old.progress != progress || old.isCheckedIn != isCheckedIn;
 }
-
-// class _WorkProgress extends StatelessWidget {
-//   const _WorkProgress({required this.value});
-//   final double value;
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       children: [
-//         Row(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           children: [
-//             CommonText(text:'Work Progress', fontSize: 12, color: AppColors.grey),
-//             CommonText(text:
-//               '${(value * 100).toInt()}% of 8h',
-//               fontSize: 12,
-//               color: AppColors.primary,
-//               fontWeight: FontWeight.w600,
-//             ),
-//           ],
-//         ),
-//         const SizedBox(height: 6),
-//         ClipRRect(
-//           borderRadius: BorderRadius.circular(8),
-//           child: LinearProgressIndicator(
-//             value: value,
-//             minHeight: 6,
-//             backgroundColor: AppColors.greyLight,
-//             valueColor: AlwaysStoppedAnimation<Color>(
-//               value >= 1.0 ? AppColors.success : AppColors.primary,
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
 
 class _HalfDayNotice extends StatelessWidget {
   @override
